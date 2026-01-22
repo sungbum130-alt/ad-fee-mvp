@@ -1,0 +1,204 @@
+﻿<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>광고 대행 수수료 체크</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <p class="eyebrow">MVP 수수료 체크</p>
+        <h1>우리 대행사 수수료 적정할까?</h1>
+        <p class="subhead">
+          몇 초 만에 적정 구간을 계산하고 입력값을 비교해보세요.
+        </p>
+      </header>
+
+      <section class="card">
+        <form id="quote-form" class="form">
+          <label class="field">
+            <span>난이도</span>
+            <select id="difficulty" name="difficulty">
+              <option value="Low">낮음</option>
+              <option value="Medium">보통</option>
+              <option value="High">높음</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>월 광고 예산 (KRW)</span>
+            <input
+              id="budget"
+              name="budget"
+              type="number"
+              min="0"
+              step="100000"
+              inputmode="numeric"
+              placeholder="10000000"
+            />
+          </label>
+
+          <label class="field">
+            <span>대행사 수수료 비율 (%)</span>
+            <input
+              id="fee"
+              name="fee"
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              inputmode="decimal"
+              placeholder="12"
+            />
+          </label>
+
+          <div class="checklist">
+            <p class="section-title">포함 업무 체크리스트</p>
+            <div class="checklist-groups">
+              <fieldset class="checklist-group">
+                <legend>운영/전략</legend>
+                <label class="check-item">
+                  <input type="checkbox" name="checklist" value="단순 매체 운영" data-weight="0" />
+                  단순 매체 운영
+                </label>
+                <label class="check-item">
+                  <input type="checkbox" name="checklist" value="소재 테스트(A/B)" data-weight="2" />
+                  소재 테스트(A/B)
+                </label>
+                <label class="check-item">
+                  <input type="checkbox" name="checklist" value="주간 최적화" data-weight="2" />
+                  주간 최적화
+                </label>
+                <label class="check-item">
+                  <input type="checkbox" name="checklist" value="퍼널/전략 설계" data-weight="3" />
+                  퍼널/전략 설계
+                </label>
+                <label class="check-item">
+                  <input
+                    type="checkbox"
+                    name="checklist"
+                    value="성과 기반 구조 설계"
+                    data-weight="3"
+                  />
+                  성과 기반 구조 설계
+                </label>
+              </fieldset>
+
+              <fieldset class="checklist-group">
+                <legend>소재/콘텐츠</legend>
+                <label class="check-item">
+                  <input type="checkbox" name="checklist" value="광고 문구 작성" data-weight="1" />
+                  광고 문구 작성
+                </label>
+                <label class="check-item">
+                  <input type="checkbox" name="checklist" value="이미지 배너 제작" data-weight="2" />
+                  이미지 배너 제작
+                </label>
+                <label class="check-item">
+                  <input type="checkbox" name="checklist" value="영상 소재 제작" data-weight="3" />
+                  영상 소재 제작
+                </label>
+                <label class="check-item">
+                  <input type="checkbox" name="checklist" value="쇼츠/릴스 영상 제작" data-weight="3" />
+                  쇼츠/릴스 영상 제작
+                </label>
+                <label class="check-item">
+                  <input
+                    type="checkbox"
+                    name="checklist"
+                    value="월 n개 이상 지속 제작"
+                    data-weight="2"
+                  />
+                  월 n개 이상 지속 제작
+                </label>
+              </fieldset>
+
+              <fieldset class="checklist-group">
+                <legend>데이터/리포팅</legend>
+                <label class="check-item">
+                  <input type="checkbox" name="checklist" value="주간 리포트" data-weight="1" />
+                  주간 리포트
+                </label>
+                <label class="check-item">
+                  <input type="checkbox" name="checklist" value="GA/전환 연동" data-weight="2" />
+                  GA/전환 연동
+                </label>
+                <label class="check-item">
+                  <input type="checkbox" name="checklist" value="대시보드 제공" data-weight="2" />
+                  대시보드 제공
+                </label>
+                <label class="check-item">
+                  <input type="checkbox" name="checklist" value="인사이트 해석 포함" data-weight="2" />
+                  인사이트 해석 포함
+                </label>
+              </fieldset>
+
+              <fieldset class="checklist-group">
+                <legend>커뮤니케이션</legend>
+                <label class="check-item">
+                  <input type="checkbox" name="checklist" value="주간 미팅" data-weight="1" />
+                  주간 미팅
+                </label>
+                <label class="check-item">
+                  <input type="checkbox" name="checklist" value="실시간 피드백" data-weight="2" />
+                  실시간 피드백
+                </label>
+                <label class="check-item">
+                  <input type="checkbox" name="checklist" value="임원 보고용 자료" data-weight="2" />
+                  임원 보고용 자료
+                </label>
+              </fieldset>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <section class="result" aria-live="polite">
+        <div class="badge" id="label">적정</div>
+        <p id="range">예상 적정 수수료 범위: 6% ~ 10%</p>
+        <p id="explanation">기본 8% + 난이도 0% + 업무 0% = 8%</p>
+        <ul id="selected-items" class="selected-items"></ul>
+      </section>
+
+      <section class="card" id="microFeedback" aria-labelledby="mfTitle">
+        <div class="micro-feedback">
+          <h2 id="mfTitle">Quick Feedback</h2>
+          <div class="mf-block" role="group" aria-labelledby="mfQ1">
+            <p id="mfQ1">Was this result helpful?</p>
+            <div class="mf-buttons">
+              <button type="button" id="mfHelpful">👍 Helpful</button>
+              <button type="button" id="mfNotSure">👎 Not sure</button>
+            </div>
+          </div>
+          <div class="mf-block">
+            <p>What will you do next?</p>
+            <label class="mf-radio">
+              <input type="radio" name="mfAction" value="ask_questions" />
+              ask_questions
+            </label>
+            <label class="mf-radio">
+              <input type="radio" name="mfAction" value="renegotiate" />
+              renegotiate
+            </label>
+            <label class="mf-radio">
+              <input type="radio" name="mfAction" value="reference_only" />
+              reference_only
+            </label>
+          </div>
+          <div class="mf-actions">
+            <button type="button" id="mfSave">Save</button>
+            <div id="mfStatus" role="status" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footnote">
+        브라우저 로컬 환경에서만 저장됩니다. 어떤 데이터도 전송되지 않습니다.
+      </footer>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
