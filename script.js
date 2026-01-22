@@ -366,3 +366,26 @@ if (openFormInlineBtn) {
     window.open(GOOGLE_FORM_URL, "_blank", "noopener,noreferrer");
   });
 }
+document.addEventListener("DOMContentLoaded", () => {
+  const helpfulBtn = document.getElementById("mfHelpful");
+  const notSureBtn = document.getElementById("mfNotSure");
+
+  const sendEvent = (name, params = {}) => {
+    if (typeof window.gtag === "function") {
+      window.gtag("event", name, { debug_mode: true, ...params });
+    }
+    console.log("[GA event]", name, params);
+  };
+
+  if (helpfulBtn) {
+    helpfulBtn.addEventListener("click", () => {
+      sendEvent("mf_helpful_click", { sentiment: "helpful" });
+    });
+  }
+
+  if (notSureBtn) {
+    notSureBtn.addEventListener("click", () => {
+      sendEvent("mf_not_sure_click", { sentiment: "not_sure" });
+    });
+  }
+});
