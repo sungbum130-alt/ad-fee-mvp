@@ -232,6 +232,91 @@ select:focus {
   align-items: center;
 }
 
+.form-prompt {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255, 250, 243, 0.85);
+  border: 1px solid rgba(29, 28, 26, 0.12);
+}
+
+.form-prompt-title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.form-prompt-sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.form-prompt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.form-prompt-actions button {
+  font: inherit;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(29, 28, 26, 0.2);
+  background: #fffaf3;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-prompt-actions button:not(.ghost) {
+  background: var(--accent);
+  color: #fffaf3;
+  border-color: var(--accent-dark);
+  box-shadow: 0 8px 16px rgba(195, 83, 47, 0.18);
+}
+
+.ghost {
+  background: transparent;
+}
+
+.linklike {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent-dark);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+#formInlineWrap button {
+  font: inherit;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(29, 28, 26, 0.2);
+  background: #fffaf3;
+  cursor: pointer;
+}
+
+#formInlineWrap .ghost {
+  background: transparent;
+}
+
+.form-inline-text {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.small {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.hidden {
+  display: none;
+}
+
 #mfStatus {
   font-size: 0.9rem;
   color: var(--muted);

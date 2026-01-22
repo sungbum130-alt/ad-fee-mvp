@@ -10,6 +10,34 @@
 };
 
 const STORAGE_KEY = "ad-quote-check";
+const GOOGLE_FORM_URL = "https://forms.gle/Y7vmUDTLxkEoSb4A8";
+
+const COPY = {
+  verdictLabels: {
+    efficient: "업무 범위 대비 효율적",
+    typical: "평균적인 수준",
+    high: "평균 대비 높은 편",
+  },
+  verdictDescriptions: {
+    efficient:
+      "현재 선택한 업무 범위 기준으로 보면, 일반적인 사례보다 비용이 낮은 편으로 보입니다. 포함 업무와 범위를 기준으로 합리적으로 구성된 것으로 해석할 수 있습니다.",
+    typical:
+      "현재 선택한 업무 범위 기준으로 보면, 일반적인 사례와 비슷한 수준으로 보입니다. 현재 조건을 기준으로 무난한 범위입니다.",
+    high:
+      "현재 선택한 업무 범위 기준으로 보면, 일반적인 사례와 비교했을 때 비용이 다소 높은 편으로 보입니다. 포함 업무와 조건을 한 번 더 확인해보는 것이 좋습니다.",
+  },
+  range: (min, max) => `예상 적정 수수료 범위: ${min}% ~ ${max}%`,
+  formula: (difficultyAdjust, sum, expected) =>
+    `계산 기준: 기본 8% + 난이도 ${difficultyAdjust}% + 업무 ${sum}% = ${expected}%`,
+  selectedEmpty: "선택한 항목 없음",
+  microFeedback: {
+    selectSentiment: "도움 여부를 선택해주세요.",
+    saved: "선택이 저장되었습니다.",
+  },
+  formPrompt: {
+    opened: "새 탭에서 설문을 작성한 뒤 돌아와 주세요.",
+  },
+};
 
 const form = document.getElementById("quote-form");
 const difficultyEl = document.getElementById("difficulty");
@@ -29,6 +57,13 @@ const mfStatusEl = document.getElementById("mfStatus");
 const mfActionEls = Array.from(
   document.querySelectorAll('input[name="mfAction"]')
 );
+const formPromptEl = document.getElementById("formPrompt");
+const openFormBtn = document.getElementById("openFormBtn");
+const dismissFormBtn = document.getElementById("dismissFormBtn");
+const formPromptStatusEl = document.getElementById("formPromptStatus");
+const toggleFormInlineBtn = document.getElementById("toggleFormInline");
+const formInlineWrapEl = document.getElementById("formInlineWrap");
+const openFormInlineBtn = document.getElementById("openFormInlineBtn");
 
 window.__LAST_RESULT__ = null;
 
@@ -69,22 +104,22 @@ function getFeeBucket(feePercent) {
 
 function classifyQuote(fee, min, max) {
   if (!Number.isFinite(fee)) {
-    return "적정";
+    return COPY.verdictLabels.typical;
   }
   if (fee < min) {
-    return "가성비 좋음";
+    return COPY.verdictLabels.efficient;
   }
   if (fee <= max) {
-    return "적정";
+    return COPY.verdictLabels.typical;
   }
-  return "과도";
+  return COPY.verdictLabels.high;
 }
 
 function renderSelectedItems(items) {
   selectedItemsEl.innerHTML = "";
   if (!items.length) {
     const emptyItem = document.createElement("li");
-    emptyItem.textContent = "선택 없음";
+    emptyItem.textContent = COPY.selectedEmpty;
     selectedItemsEl.appendChild(emptyItem);
     return;
   }
@@ -104,6 +139,21 @@ function getCurrentResultSnapshot() {
   return window.__LAST_RESULT__;
 }
 
+function showFormPrompt() {
+  if (!formPromptEl) {
+    return;
+  }
+  formPromptEl.classList.remove("hidden");
+  formPromptEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function hideFormPrompt() {
+  if (!formPromptEl) {
+    return;
+  }
+  formPromptEl.classList.add("hidden");
+}
+
 function saveMicroFeedback() {
   const sentiment = mfHelpfulBtn.classList.contains("is-active")
     ? "helpful"
@@ -112,7 +162,7 @@ function saveMicroFeedback() {
     : null;
 
   if (!sentiment) {
-    mfStatusEl.textContent = "Please select helpful or not sure.";
+    mfStatusEl.textContent = COPY.microFeedback.selectSentiment;
     mfStatusEl.dataset.state = "error";
     return;
   }
@@ -148,8 +198,10 @@ function saveMicroFeedback() {
   const limited = next.slice(0, 200);
   localStorage.setItem("mvp_micro_feedback", JSON.stringify(limited));
 
-  mfStatusEl.textContent = "Saved!";
+  mfStatusEl.textContent = COPY.microFeedback.saved;
   mfStatusEl.dataset.state = "success";
+
+  showFormPrompt();
 
   const feeBucket = getFeeBucket(snapshot?.feePercent);
   track("mf_save", {
@@ -176,14 +228,24 @@ function updateResult() {
 
   labelEl.textContent = label;
   labelEl.style.background =
-    label === "가성비 좋음"
+    label === COPY.verdictLabels.efficient
       ? "#2c7a4b"
-      : label === "적정"
+      : label === COPY.verdictLabels.typical
       ? "#c3532f"
       : "#8a371f";
 
-  rangeEl.textContent = `예상 적정 수수료 범위: ${min}% ~ ${max}%`;
-  explanationEl.textContent = `기본 8% + 난이도 ${difficultyAdjust}% + 업무 ${sum}% = ${expected}%`;
+  rangeEl.textContent = COPY.range(min, max);
+  const verdictDescription =
+    label === COPY.verdictLabels.efficient
+      ? COPY.verdictDescriptions.efficient
+      : label === COPY.verdictLabels.typical
+      ? COPY.verdictDescriptions.typical
+      : COPY.verdictDescriptions.high;
+  explanationEl.textContent = `${label}: ${verdictDescription} ${COPY.formula(
+    difficultyAdjust,
+    sum,
+    expected
+  )}`;
   renderSelectedItems(items);
 
   window.__LAST_RESULT__ = {
@@ -270,4 +332,37 @@ if (mfHelpfulBtn && mfNotSureBtn && mfSaveBtn) {
   });
 
   mfSaveBtn.addEventListener("click", saveMicroFeedback);
+}
+
+if (openFormBtn) {
+  openFormBtn.addEventListener("click", () => {
+    track("open_google_form", { source: "after_save_prompt" });
+    window.open(GOOGLE_FORM_URL, "_blank", "noopener,noreferrer");
+    if (formPromptStatusEl) {
+      formPromptStatusEl.textContent = COPY.formPrompt.opened;
+    }
+  });
+}
+
+if (dismissFormBtn) {
+  dismissFormBtn.addEventListener("click", () => {
+    track("dismiss_google_form", { source: "after_save_prompt" });
+    hideFormPrompt();
+  });
+}
+
+if (toggleFormInlineBtn && formInlineWrapEl) {
+  toggleFormInlineBtn.addEventListener("click", () => {
+    const willShow = formInlineWrapEl.classList.contains("hidden");
+    formInlineWrapEl.classList.toggle("hidden", !willShow);
+    toggleFormInlineBtn.setAttribute("aria-expanded", String(willShow));
+    track("toggle_form_inline", { is_open: willShow });
+  });
+}
+
+if (openFormInlineBtn) {
+  openFormInlineBtn.addEventListener("click", () => {
+    track("open_google_form", { source: "inline_toggle" });
+    window.open(GOOGLE_FORM_URL, "_blank", "noopener,noreferrer");
+  });
 }

@@ -9,7 +9,7 @@
   <body>
     <main class="page">
       <header class="hero">
-        <p class="eyebrow">MVP 수수료 체크</p>
+        <p class="eyebrow">간단 수수료 체크</p>
         <h1>우리 대행사 수수료 적정할까?</h1>
         <p class="subhead">
           몇 초 만에 적정 구간을 계산하고 입력값을 비교해보세요.
@@ -28,7 +28,7 @@
           </label>
 
           <label class="field">
-            <span>월 광고 예산 (KRW)</span>
+            <span>월 광고 예산 (원)</span>
             <input
               id="budget"
               name="budget"
@@ -64,8 +64,8 @@
                   단순 매체 운영
                 </label>
                 <label class="check-item">
-                  <input type="checkbox" name="checklist" value="소재 테스트(A/B)" data-weight="2" />
-                  소재 테스트(A/B)
+                  <input type="checkbox" name="checklist" value="소재 비교 테스트" data-weight="2" />
+                  소재 비교 테스트
                 </label>
                 <label class="check-item">
                   <input type="checkbox" name="checklist" value="주간 최적화" data-weight="2" />
@@ -108,10 +108,10 @@
                   <input
                     type="checkbox"
                     name="checklist"
-                    value="월 n개 이상 지속 제작"
+                    value="월 일정 개수 이상 지속 제작"
                     data-weight="2"
                   />
-                  월 n개 이상 지속 제작
+                  월 일정 개수 이상 지속 제작
                 </label>
               </fieldset>
 
@@ -122,8 +122,13 @@
                   주간 리포트
                 </label>
                 <label class="check-item">
-                  <input type="checkbox" name="checklist" value="GA/전환 연동" data-weight="2" />
-                  GA/전환 연동
+                  <input
+                    type="checkbox"
+                    name="checklist"
+                    value="전환/애널리틱스 연동"
+                    data-weight="2"
+                  />
+                  전환/애널리틱스 연동
                 </label>
                 <label class="check-item">
                   <input type="checkbox" name="checklist" value="대시보드 제공" data-weight="2" />
@@ -156,40 +161,64 @@
       </section>
 
       <section class="result" aria-live="polite">
-        <div class="badge" id="label">적정</div>
+        <div class="badge" id="label">평균적인 수준</div>
         <p id="range">예상 적정 수수료 범위: 6% ~ 10%</p>
-        <p id="explanation">기본 8% + 난이도 0% + 업무 0% = 8%</p>
+        <p id="explanation">
+          평균적인 수준: 현재 선택한 업무 범위 기준으로 보면, 일반적인 사례와 비슷한 수준으로
+          보입니다. 현재 조건을 기준으로 무난한 범위입니다. 계산 기준: 기본 8% + 난이도 0% +
+          업무 0% = 8%
+        </p>
         <ul id="selected-items" class="selected-items"></ul>
       </section>
 
       <section class="card" id="microFeedback" aria-labelledby="mfTitle">
         <div class="micro-feedback">
-          <h2 id="mfTitle">Quick Feedback</h2>
+          <h2 id="mfTitle">간단한 의견 남기기</h2>
           <div class="mf-block" role="group" aria-labelledby="mfQ1">
-            <p id="mfQ1">Was this result helpful?</p>
+            <p id="mfQ1">이 결과는 이해하는 데 도움이 되었나요?</p>
             <div class="mf-buttons">
-              <button type="button" id="mfHelpful">👍 Helpful</button>
-              <button type="button" id="mfNotSure">👎 Not sure</button>
+              <button type="button" id="mfHelpful">👍 도움이 됐어요</button>
+              <button type="button" id="mfNotSure">👎 잘 모르겠어요</button>
             </div>
           </div>
           <div class="mf-block">
-            <p>What will you do next?</p>
+            <p>이 결과를 보고 어떻게 할 것 같나요?</p>
             <label class="mf-radio">
               <input type="radio" name="mfAction" value="ask_questions" />
-              ask_questions
+              대행사에 한 번 더 물어볼 것 같아요
             </label>
             <label class="mf-radio">
               <input type="radio" name="mfAction" value="renegotiate" />
-              renegotiate
+              조건이나 비용을 다시 이야기해볼 것 같아요
             </label>
             <label class="mf-radio">
               <input type="radio" name="mfAction" value="reference_only" />
-              reference_only
+              그냥 참고만 할 것 같아요
             </label>
           </div>
           <div class="mf-actions">
-            <button type="button" id="mfSave">Save</button>
+            <button type="button" id="mfSave">선택 저장하기</button>
             <div id="mfStatus" role="status" aria-live="polite"></div>
+          </div>
+          <div id="formPrompt" class="form-prompt hidden">
+            <p class="form-prompt-title">조금 더 자세한 의견을 남겨주실 수 있을까요?</p>
+            <p class="form-prompt-sub">1분이면 충분해요. (선택)</p>
+            <div class="form-prompt-actions">
+              <button id="openFormBtn" type="button">설문에 참여하기</button>
+              <button id="dismissFormBtn" type="button" class="ghost">지금은 괜찮아요</button>
+            </div>
+            <div id="formPromptStatus" class="small"></div>
+          </div>
+          <button id="toggleFormInline" class="linklike" type="button">
+            더 자세한 의견 남기기 (선택)
+          </button>
+          <div id="formInlineWrap" class="hidden">
+            <p class="form-inline-text">
+              새 탭에서 설문을 작성할 수 있어요. 작성 후 이 화면으로 돌아오면 됩니다.
+            </p>
+            <button id="openFormInlineBtn" type="button" class="ghost">
+              설문 열기
+            </button>
           </div>
         </div>
       </section>
