@@ -1,4 +1,4 @@
-﻿const CONFIG = {
+const CONFIG = {
   baseFee: 8,
   difficultyAdjust: {
     Low: 0,
@@ -10,6 +10,8 @@
 };
 
 const STORAGE_KEY = "ad-quote-check";
+const SAVE_KEY = "ad-quote-check-saved";
+const FORM_START_KEY = "ad-quote-form-started";
 const GOOGLE_FORM_URL = "https://forms.gle/Y7vmUDTLxkEoSb4A8";
 
 const COPY = {
@@ -30,15 +32,20 @@ const COPY = {
   formula: (difficultyAdjust, sum, expected) =>
     `계산 기준: 기본 8% + 난이도 ${difficultyAdjust}% + 업무 ${sum}% = ${expected}%`,
   selectedEmpty: "선택한 항목 없음",
-  microFeedback: {
-    selectSentiment: "도움 여부를 선택해주세요.",
-    saved: "선택이 저장되었습니다.",
-  },
-  formPrompt: {
-    opened: "새 탭에서 설문을 작성한 뒤 돌아와 주세요.",
-  },
+  saved: "저장 완료! 이 브라우저에만 저장됩니다.",
 };
 
+const state = {
+  sentiment: null,
+  lastResult: null,
+};
+
+const startBtn = document.getElementById("startBtn");
+const previewBtn = document.getElementById("previewBtn");
+const sentimentButtons = Array.from(
+  document.querySelectorAll("[data-sentiment]")
+);
+const sentimentNextBtn = document.getElementById("sentimentNext");
 const form = document.getElementById("quote-form");
 const difficultyEl = document.getElementById("difficulty");
 const budgetEl = document.getElementById("budget");
@@ -46,26 +53,39 @@ const feeEl = document.getElementById("fee");
 const checklistEls = Array.from(
   document.querySelectorAll('input[name="checklist"]')
 );
+const calculateBtn = document.getElementById("calculateBtn");
 const labelEl = document.getElementById("label");
 const rangeEl = document.getElementById("range");
 const explanationEl = document.getElementById("explanation");
 const selectedItemsEl = document.getElementById("selected-items");
-const mfHelpfulBtn = document.getElementById("mfHelpful");
-const mfNotSureBtn = document.getElementById("mfNotSure");
-const mfSaveBtn = document.getElementById("mfSave");
-const mfStatusEl = document.getElementById("mfStatus");
-const mfActionEls = Array.from(
-  document.querySelectorAll('input[name="mfAction"]')
+const summaryRangeEl = document.getElementById("summaryRange");
+const summaryRiskEl = document.getElementById("summaryRisk");
+const summaryActionEl = document.getElementById("summaryAction");
+const actionButtons = Array.from(
+  document.querySelectorAll("[data-action]")
 );
-const formPromptEl = document.getElementById("formPrompt");
-const openFormBtn = document.getElementById("openFormBtn");
-const dismissFormBtn = document.getElementById("dismissFormBtn");
-const formPromptStatusEl = document.getElementById("formPromptStatus");
-const toggleFormInlineBtn = document.getElementById("toggleFormInline");
-const formInlineWrapEl = document.getElementById("formInlineWrap");
-const openFormInlineBtn = document.getElementById("openFormInlineBtn");
+const helpfulYesBtn = document.getElementById("helpfulYes");
+const helpfulNoBtn = document.getElementById("helpfulNo");
+const saveBtn = document.getElementById("saveBtn");
+const saveStatusEl = document.getElementById("saveStatus");
+const feedbackBtn = document.getElementById("feedbackBtn");
 
-window.__LAST_RESULT__ = null;
+function track(eventName, params = {}) {
+  if (typeof window.gtag === "function") {
+    window.gtag("event", eventName, params);
+    return;
+  }
+  console.log("[track]", eventName, params);
+}
+
+function trackFormStart(source) {
+  if (sessionStorage.getItem(FORM_START_KEY)) {
+    return;
+  }
+  sessionStorage.setItem(FORM_START_KEY, "1");
+  // EVENT: form_start
+  track("form_start", { source });
+}
 
 function getChecklistSummary() {
   const selected = checklistEls.filter((item) => item.checked);
@@ -75,31 +95,6 @@ function getChecklistSummary() {
   }, 0);
   const items = selected.map((item) => item.value);
   return { sum, items };
-}
-
-function track(eventName, params) {
-  if (typeof window.gtag === "function") {
-    window.gtag("event", eventName, params);
-  }
-}
-
-function getFeeBucket(feePercent) {
-  if (!Number.isFinite(feePercent)) {
-    return "unknown";
-  }
-  if (feePercent < 5) {
-    return "0-5";
-  }
-  if (feePercent < 10) {
-    return "5-10";
-  }
-  if (feePercent < 15) {
-    return "10-15";
-  }
-  if (feePercent < 20) {
-    return "15-20";
-  }
-  return "20+";
 }
 
 function classifyQuote(fee, min, max) {
@@ -130,89 +125,30 @@ function renderSelectedItems(items) {
   });
 }
 
-function setSentiment(sentiment) {
-  mfHelpfulBtn.classList.toggle("is-active", sentiment === "helpful");
-  mfNotSureBtn.classList.toggle("is-active", sentiment === "not_sure");
-}
-
-function getCurrentResultSnapshot() {
-  return window.__LAST_RESULT__;
-}
-
-function showFormPrompt() {
-  if (!formPromptEl) {
-    return;
+function buildRiskLine(fee, min, max) {
+  if (!Number.isFinite(fee)) {
+    return "위험 신호: 입력값이 부족합니다.";
   }
-  formPromptEl.classList.remove("hidden");
-  formPromptEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  if (fee > max) {
+    return "위험 신호: 입력 수수료가 예상 범위보다 높습니다.";
+  }
+  if (fee < min) {
+    return "위험 신호: 입력 수수료가 예상 범위보다 낮습니다.";
+  }
+  return "위험 신호: 특별한 이상 징후는 없어요.";
 }
 
-function hideFormPrompt() {
-  if (!formPromptEl) {
-    return;
+function buildActionLine(label) {
+  if (label === COPY.verdictLabels.high) {
+    return "추천 액션: 포함 업무 기준으로 재질문 후 재협상을 준비하세요.";
   }
-  formPromptEl.classList.add("hidden");
+  if (label === COPY.verdictLabels.efficient) {
+    return "추천 액션: 업무 누락이 없는지 확인하고 비교 견적을 받아보세요.";
+  }
+  return "추천 액션: 핵심 KPI와 리포팅 범위를 한 번 더 명확히 하세요.";
 }
 
-function saveMicroFeedback() {
-  const sentiment = mfHelpfulBtn.classList.contains("is-active")
-    ? "helpful"
-    : mfNotSureBtn.classList.contains("is-active")
-    ? "not_sure"
-    : null;
-
-  if (!sentiment) {
-    mfStatusEl.textContent = COPY.microFeedback.selectSentiment;
-    mfStatusEl.dataset.state = "error";
-    return;
-  }
-
-  const selectedAction = mfActionEls.find((item) => item.checked);
-  const actionIntent = selectedAction ? selectedAction.value : null;
-  const snapshot = getCurrentResultSnapshot();
-
-  const payload = {
-    sentiment,
-    actionIntent,
-    snapshot,
-    meta: {
-      tsISO: new Date().toISOString(),
-      url: window.location.href,
-      userAgent: navigator.userAgent,
-    },
-  };
-
-  const raw = localStorage.getItem("mvp_micro_feedback");
-  let next = [];
-  if (raw) {
-    try {
-      const existing = JSON.parse(raw);
-      if (Array.isArray(existing)) {
-        next = existing;
-      }
-    } catch (error) {
-      console.warn("Failed to read micro feedback data.", error);
-    }
-  }
-  next.unshift(payload);
-  const limited = next.slice(0, 200);
-  localStorage.setItem("mvp_micro_feedback", JSON.stringify(limited));
-
-  mfStatusEl.textContent = COPY.microFeedback.saved;
-  mfStatusEl.dataset.state = "success";
-
-  showFormPrompt();
-
-  const feeBucket = getFeeBucket(snapshot?.feePercent);
-  track("mf_save", {
-    sentiment,
-    action_intent: actionIntent,
-    verdict: snapshot?.verdictLabel,
-    fee_bucket: feeBucket,
-  });
-}
-
-function updateResult() {
+function computeResult() {
   const difficulty = difficultyEl.value;
   const fee = Number(feeEl.value);
   const { sum, items } = getChecklistSummary();
@@ -226,42 +162,59 @@ function updateResult() {
     ? (budget * fee) / 100
     : 0;
 
-  labelEl.textContent = label;
+  return {
+    difficulty,
+    fee,
+    budget,
+    min,
+    max,
+    label,
+    expected,
+    difficultyAdjust,
+    sum,
+    items,
+    monthlyFee,
+  };
+}
+
+function renderResult(result) {
+  if (!result) {
+    return;
+  }
+
+  labelEl.textContent = result.label;
   labelEl.style.background =
-    label === COPY.verdictLabels.efficient
+    result.label === COPY.verdictLabels.efficient
       ? "#2c7a4b"
-      : label === COPY.verdictLabels.typical
+      : result.label === COPY.verdictLabels.typical
       ? "#c3532f"
       : "#8a371f";
 
-  rangeEl.textContent = COPY.range(min, max);
+  rangeEl.textContent = COPY.range(result.min, result.max);
   const verdictDescription =
-    label === COPY.verdictLabels.efficient
+    result.label === COPY.verdictLabels.efficient
       ? COPY.verdictDescriptions.efficient
-      : label === COPY.verdictLabels.typical
+      : result.label === COPY.verdictLabels.typical
       ? COPY.verdictDescriptions.typical
       : COPY.verdictDescriptions.high;
-  explanationEl.textContent = `${label}: ${verdictDescription} ${COPY.formula(
-    difficultyAdjust,
-    sum,
-    expected
+  explanationEl.textContent = `${result.label}: ${verdictDescription} ${COPY.formula(
+    result.difficultyAdjust,
+    result.sum,
+    result.expected
   )}`;
-  renderSelectedItems(items);
 
-  window.__LAST_RESULT__ = {
-    verdictLabel: label,
-    feePercent: Number.isFinite(fee) ? fee : 0,
-    totalScore: expected,
-    monthlyBudget: Number.isFinite(budget) ? budget : 0,
-    monthlyFee,
-    selectedItemsCount: items.length,
-  };
+  summaryRangeEl.textContent = `적정 수수료 범위: ${result.min}% ~ ${result.max}%`;
+  summaryRiskEl.textContent = buildRiskLine(result.fee, result.min, result.max);
+  summaryActionEl.textContent = buildActionLine(result.label);
+
+  renderSelectedItems(result.items);
+  state.lastResult = result;
 
   const payload = {
-    difficulty,
-    budget,
-    fee,
-    checklist: items,
+    difficulty: result.difficulty,
+    budget: result.budget,
+    fee: result.fee,
+    checklist: result.items,
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
 }
@@ -293,99 +246,109 @@ function loadStored() {
   }
 }
 
-form.addEventListener("input", updateResult);
-form.addEventListener("change", updateResult);
+function scrollToSection(id) {
+  const target = document.getElementById(id);
+  if (!target) {
+    return;
+  }
+  target.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function setSentiment(option, button) {
+  state.sentiment = option;
+  sentimentButtons.forEach((btn) => {
+    btn.classList.toggle("is-active", btn === button);
+  });
+  sentimentNextBtn.disabled = false;
+}
+
+function clearHelpfulState() {
+  helpfulYesBtn?.classList.remove("is-active");
+  helpfulNoBtn?.classList.remove("is-active");
+}
+
+startBtn?.addEventListener("click", () => {
+  trackFormStart("hero_start");
+  scrollToSection("sentiment");
+});
+
+previewBtn?.addEventListener("click", () => {
+  scrollToSection("example");
+});
+
+sentimentButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const option = button.dataset.sentiment || "unknown";
+    setSentiment(option, button);
+    // EVENT: mf_sentiment_select
+    track("mf_sentiment_select", { option });
+  });
+});
+
+sentimentNextBtn?.addEventListener("click", () => {
+  scrollToSection("form");
+});
+
+form?.addEventListener("focusin", () => {
+  trackFormStart("form_focus");
+});
+
+form?.addEventListener("input", () => {
+  trackFormStart("form_input");
+});
+
+calculateBtn?.addEventListener("click", () => {
+  const result = computeResult();
+  renderResult(result);
+  clearHelpfulState();
+  scrollToSection("result");
+});
+
+actionButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const action = button.dataset.action || "unknown";
+    // EVENT: mf_action_select
+    track("mf_action_select", { action });
+  });
+});
+
+helpfulYesBtn?.addEventListener("click", () => {
+  helpfulYesBtn.classList.add("is-active");
+  helpfulNoBtn?.classList.remove("is-active");
+  // EVENT: mf_helpful_click
+  track("mf_helpful_click", { value: "yes" });
+});
+
+helpfulNoBtn?.addEventListener("click", () => {
+  helpfulNoBtn.classList.add("is-active");
+  helpfulYesBtn?.classList.remove("is-active");
+  // EVENT: mf_helpful_click
+  track("mf_helpful_click", { value: "no" });
+});
+
+saveBtn?.addEventListener("click", () => {
+  const result = state.lastResult ?? computeResult();
+  renderResult(result);
+
+  const payload = {
+    sentiment: state.sentiment,
+    result,
+    savedAt: new Date().toISOString(),
+  };
+  localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+
+  if (saveStatusEl) {
+    saveStatusEl.textContent = COPY.saved;
+  }
+  // EVENT: mf_save
+  track("mf_save", {
+    sentiment: state.sentiment,
+    verdict: result.label,
+  });
+});
+
+feedbackBtn?.addEventListener("click", () => {
+  window.open(GOOGLE_FORM_URL, "_blank", "noopener,noreferrer");
+});
 
 loadStored();
-updateResult();
-
-if (mfHelpfulBtn && mfNotSureBtn && mfSaveBtn) {
-  mfHelpfulBtn.addEventListener("click", () => {
-    setSentiment("helpful");
-    const snapshot = getCurrentResultSnapshot();
-    track("mf_sentiment_select", {
-      sentiment: "helpful",
-      verdict: snapshot?.verdictLabel,
-      fee_bucket: getFeeBucket(snapshot?.feePercent),
-    });
-  });
-
-  mfNotSureBtn.addEventListener("click", () => {
-    setSentiment("not_sure");
-    const snapshot = getCurrentResultSnapshot();
-    track("mf_sentiment_select", {
-      sentiment: "not_sure",
-      verdict: snapshot?.verdictLabel,
-      fee_bucket: getFeeBucket(snapshot?.feePercent),
-    });
-  });
-
-  mfActionEls.forEach((radio) => {
-    radio.addEventListener("change", () => {
-      const snapshot = getCurrentResultSnapshot();
-      track("mf_action_select", {
-        action_intent: radio.value,
-        verdict: snapshot?.verdictLabel,
-        fee_bucket: getFeeBucket(snapshot?.feePercent),
-      });
-    });
-  });
-
-  mfSaveBtn.addEventListener("click", saveMicroFeedback);
-}
-
-if (openFormBtn) {
-  openFormBtn.addEventListener("click", () => {
-    track("open_google_form", { source: "after_save_prompt" });
-    window.open(GOOGLE_FORM_URL, "_blank", "noopener,noreferrer");
-    if (formPromptStatusEl) {
-      formPromptStatusEl.textContent = COPY.formPrompt.opened;
-    }
-  });
-}
-
-if (dismissFormBtn) {
-  dismissFormBtn.addEventListener("click", () => {
-    track("dismiss_google_form", { source: "after_save_prompt" });
-    hideFormPrompt();
-  });
-}
-
-if (toggleFormInlineBtn && formInlineWrapEl) {
-  toggleFormInlineBtn.addEventListener("click", () => {
-    const willShow = formInlineWrapEl.classList.contains("hidden");
-    formInlineWrapEl.classList.toggle("hidden", !willShow);
-    toggleFormInlineBtn.setAttribute("aria-expanded", String(willShow));
-    track("toggle_form_inline", { is_open: willShow });
-  });
-}
-
-if (openFormInlineBtn) {
-  openFormInlineBtn.addEventListener("click", () => {
-    track("open_google_form", { source: "inline_toggle" });
-    window.open(GOOGLE_FORM_URL, "_blank", "noopener,noreferrer");
-  });
-}
-document.addEventListener("DOMContentLoaded", () => {
-  const helpfulBtn = document.getElementById("mfHelpful");
-  const notSureBtn = document.getElementById("mfNotSure");
-
-  const sendEvent = (name, params = {}) => {
-    if (typeof window.gtag === "function") {
-      window.gtag("event", name, { debug_mode: true, ...params });
-    }
-    console.log("[GA event]", name, params);
-  };
-
-  if (helpfulBtn) {
-    helpfulBtn.addEventListener("click", () => {
-      sendEvent("mf_helpful_click", { sentiment: "helpful" });
-    });
-  }
-
-  if (notSureBtn) {
-    notSureBtn.addEventListener("click", () => {
-      sendEvent("mf_not_sure_click", { sentiment: "not_sure" });
-    });
-  }
-});

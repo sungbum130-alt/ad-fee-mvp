@@ -1,40 +1,81 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ko">
   <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>광고 대행 수수료 체크</title>
     <link rel="stylesheet" href="style.css" />
-<!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-EZFTKJR6CD"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-EZFTKJR6CD');
-</script>
   </head>
   <body>
     <main class="page">
-      <header class="hero">
-        <p class="eyebrow">간단 수수료 체크</p>
-        <h1>우리 대행사 수수료 적정할까?</h1>
+      <section id="hero" class="section hero">
+        <p class="eyebrow">30초 수수료 진단</p>
+        <h1>이 광고 견적서, 정상인지 아닌지만 30초면 확인됩니다</h1>
         <p class="subhead">
-          몇 초 만에 적정 구간을 계산하고 입력값을 비교해보세요.
+          대행 수수료(%)가 업무 범위 대비 적정한지 빠르게 계산합니다.<br />
+          과다/누락 가능성을 체크하고, 다음에 취할 행동까지 제안합니다.
         </p>
-      </header>
+        <div class="hero-actions">
+          <button class="btn primary" id="startBtn" type="button">
+            30초 진단 시작
+          </button>
+          <button class="btn secondary" id="previewBtn" type="button">
+            예시 결과 먼저 보기
+          </button>
+        </div>
+      </section>
 
-      <section class="card">
+      <section id="example" class="section example">
+        <div class="section-head">
+          <p class="eyebrow">결과 미리보기</p>
+          <h2>이런 형태의 결과를 받게 됩니다</h2>
+        </div>
+        <div class="example-grid">
+          <article class="preview-card">
+            <p class="preview-title">과다 항목 3개 발견</p>
+            <p class="preview-sub">불필요하거나 중복된 범위를 빠르게 표시</p>
+          </article>
+          <article class="preview-card">
+            <p class="preview-title">수수료 구조: 불리할 가능성</p>
+            <p class="preview-sub">현재 조건에서 위험 신호를 요약</p>
+          </article>
+          <article class="preview-card">
+            <p class="preview-title">조정 시 예상 절감: 월 00만원</p>
+            <p class="preview-sub">협상 포인트와 기대 효과 제시</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="sentiment" class="section sentiment">
+        <div class="section-head">
+          <p class="eyebrow">상황 선택</p>
+          <h2>지금 어떤 상황인가요?</h2>
+        </div>
+        <div class="sentiment-grid" role="group" aria-label="상황 선택">
+          <button class="pill" type="button" data-sentiment="비싸게 느낌">
+            대행사 견적이 비싸게 느껴짐
+          </button>
+          <button class="pill" type="button" data-sentiment="업무 범위 불명">
+            포함 업무가 뭔지 모르겠음
+          </button>
+          <button class="pill" type="button" data-sentiment="수수료 구조 의심">
+            수수료/마진 구조가 의심됨
+          </button>
+          <button class="pill" type="button" data-sentiment="직접 집행 비교">
+            직접 집행 vs 대행 비교 중
+          </button>
+        </div>
+        <button class="btn primary" id="sentimentNext" type="button" disabled>
+          다음: 입력하기
+        </button>
+      </section>
+
+      <section id="form" class="section form-section">
+        <div class="section-head">
+          <p class="eyebrow">입력</p>
+          <h2>핵심 정보만 입력하세요</h2>
+        </div>
         <form id="quote-form" class="form">
-          <label class="field">
-            <span>난이도</span>
-            <select id="difficulty" name="difficulty">
-              <option value="Low">낮음</option>
-              <option value="Medium">보통</option>
-              <option value="High">높음</option>
-            </select>
-          </label>
-
           <label class="field">
             <span>월 광고 예산 (원)</span>
             <input
@@ -49,7 +90,7 @@
           </label>
 
           <label class="field">
-            <span>대행사 수수료 비율 (%)</span>
+            <span>대행 수수료 (%)</span>
             <input
               id="fee"
               name="fee"
@@ -62,172 +103,110 @@
             />
           </label>
 
-          <div class="checklist">
-            <p class="section-title">포함 업무 체크리스트</p>
-            <div class="checklist-groups">
-              <fieldset class="checklist-group">
-                <legend>운영/전략</legend>
-                <label class="check-item">
-                  <input type="checkbox" name="checklist" value="단순 매체 운영" data-weight="0" />
-                  단순 매체 운영
-                </label>
-                <label class="check-item">
-                  <input type="checkbox" name="checklist" value="소재 비교 테스트" data-weight="2" />
-                  소재 비교 테스트
-                </label>
-                <label class="check-item">
-                  <input type="checkbox" name="checklist" value="주간 최적화" data-weight="2" />
-                  주간 최적화
-                </label>
-                <label class="check-item">
-                  <input type="checkbox" name="checklist" value="퍼널/전략 설계" data-weight="3" />
-                  퍼널/전략 설계
-                </label>
-                <label class="check-item">
-                  <input
-                    type="checkbox"
-                    name="checklist"
-                    value="성과 기반 구조 설계"
-                    data-weight="3"
-                  />
-                  성과 기반 구조 설계
-                </label>
-              </fieldset>
+          <label class="field">
+            <span>난이도</span>
+            <select id="difficulty" name="difficulty">
+              <option value="Low">낮음</option>
+              <option value="Medium">보통</option>
+              <option value="High">높음</option>
+            </select>
+          </label>
 
-              <fieldset class="checklist-group">
-                <legend>소재/콘텐츠</legend>
-                <label class="check-item">
-                  <input type="checkbox" name="checklist" value="광고 문구 작성" data-weight="1" />
-                  광고 문구 작성
-                </label>
-                <label class="check-item">
-                  <input type="checkbox" name="checklist" value="이미지 배너 제작" data-weight="2" />
-                  이미지 배너 제작
-                </label>
-                <label class="check-item">
-                  <input type="checkbox" name="checklist" value="영상 소재 제작" data-weight="3" />
-                  영상 소재 제작
-                </label>
-                <label class="check-item">
-                  <input type="checkbox" name="checklist" value="쇼츠/릴스 영상 제작" data-weight="3" />
-                  쇼츠/릴스 영상 제작
-                </label>
-                <label class="check-item">
-                  <input
-                    type="checkbox"
-                    name="checklist"
-                    value="월 일정 개수 이상 지속 제작"
-                    data-weight="2"
-                  />
-                  월 일정 개수 이상 지속 제작
-                </label>
-              </fieldset>
-
-              <fieldset class="checklist-group">
-                <legend>데이터/리포팅</legend>
-                <label class="check-item">
-                  <input type="checkbox" name="checklist" value="주간 리포트" data-weight="1" />
-                  주간 리포트
-                </label>
-                <label class="check-item">
-                  <input
-                    type="checkbox"
-                    name="checklist"
-                    value="전환/애널리틱스 연동"
-                    data-weight="2"
-                  />
-                  전환/애널리틱스 연동
-                </label>
-                <label class="check-item">
-                  <input type="checkbox" name="checklist" value="대시보드 제공" data-weight="2" />
-                  대시보드 제공
-                </label>
-                <label class="check-item">
-                  <input type="checkbox" name="checklist" value="인사이트 해석 포함" data-weight="2" />
-                  인사이트 해석 포함
-                </label>
-              </fieldset>
-
-              <fieldset class="checklist-group">
-                <legend>커뮤니케이션</legend>
-                <label class="check-item">
-                  <input type="checkbox" name="checklist" value="주간 미팅" data-weight="1" />
-                  주간 미팅
-                </label>
-                <label class="check-item">
-                  <input type="checkbox" name="checklist" value="실시간 피드백" data-weight="2" />
-                  실시간 피드백
-                </label>
-                <label class="check-item">
-                  <input type="checkbox" name="checklist" value="임원 보고용 자료" data-weight="2" />
-                  임원 보고용 자료
-                </label>
-              </fieldset>
+          <details class="accordion">
+            <summary>포함 업무 체크리스트 (선택)</summary>
+            <div class="checklist">
+              <label class="check-item">
+                <input type="checkbox" name="checklist" value="매체 운영" data-weight="0" />
+                매체 운영
+              </label>
+              <label class="check-item">
+                <input type="checkbox" name="checklist" value="소재 A/B 테스트" data-weight="2" />
+                소재 A/B 테스트
+              </label>
+              <label class="check-item">
+                <input type="checkbox" name="checklist" value="주간 최적화" data-weight="2" />
+                주간 최적화
+              </label>
+              <label class="check-item">
+                <input type="checkbox" name="checklist" value="퍼널/전략 설계" data-weight="3" />
+                퍼널/전략 설계
+              </label>
+              <label class="check-item">
+                <input type="checkbox" name="checklist" value="광고 문구 작성" data-weight="1" />
+                광고 문구 작성
+              </label>
+              <label class="check-item">
+                <input type="checkbox" name="checklist" value="이미지 배너 제작" data-weight="2" />
+                이미지 배너 제작
+              </label>
+              <label class="check-item">
+                <input type="checkbox" name="checklist" value="영상 소재 제작" data-weight="3" />
+                영상 소재 제작
+              </label>
+              <label class="check-item">
+                <input type="checkbox" name="checklist" value="전환/애널리틱스 연동" data-weight="2" />
+                전환/애널리틱스 연동
+              </label>
             </div>
-          </div>
+          </details>
+
+          <button class="btn primary" id="calculateBtn" type="button">
+            계산하기
+          </button>
         </form>
       </section>
 
-      <section class="result" aria-live="polite">
-        <div class="badge" id="label">평균적인 수준</div>
-        <p id="range">예상 적정 수수료 범위: 6% ~ 10%</p>
-        <p id="explanation">
-          평균적인 수준: 현재 선택한 업무 범위 기준으로 보면, 일반적인 사례와 비슷한 수준으로
-          보입니다. 현재 조건을 기준으로 무난한 범위입니다. 계산 기준: 기본 8% + 난이도 0% +
-          업무 0% = 8%
-        </p>
-        <ul id="selected-items" class="selected-items"></ul>
-      </section>
-
-      <section class="card" id="microFeedback" aria-labelledby="mfTitle">
-        <div class="micro-feedback">
-          <h2 id="mfTitle">간단한 의견 남기기</h2>
-          <div class="mf-block" role="group" aria-labelledby="mfQ1">
-            <p id="mfQ1">이 결과는 이해하는 데 도움이 되었나요?</p>
-            <div class="mf-buttons">
-              <button type="button" id="mfHelpful">👍 도움이 됐어요</button>
-              <button type="button" id="mfNotSure">👎 잘 모르겠어요</button>
-            </div>
+      <section id="result" class="section result" aria-live="polite">
+        <div class="section-head">
+          <p class="eyebrow">결과</p>
+          <h2>요약 진단 결과</h2>
+        </div>
+        <div class="result-card">
+          <div class="result-summary">
+            <p id="summaryRange">적정 수수료 범위: -</p>
+            <p id="summaryRisk">위험 신호: -</p>
+            <p id="summaryAction">추천 액션: -</p>
           </div>
-          <div class="mf-block">
-            <p>이 결과를 보고 어떻게 할 것 같나요?</p>
-            <label class="mf-radio">
-              <input type="radio" name="mfAction" value="ask_questions" />
-              대행사에 한 번 더 물어볼 것 같아요
-            </label>
-            <label class="mf-radio">
-              <input type="radio" name="mfAction" value="renegotiate" />
-              조건이나 비용을 다시 이야기해볼 것 같아요
-            </label>
-            <label class="mf-radio">
-              <input type="radio" name="mfAction" value="reference_only" />
-              그냥 참고만 할 것 같아요
-            </label>
-          </div>
-          <div class="mf-actions">
-            <button type="button" id="mfSave">선택 저장하기</button>
-            <div id="mfStatus" role="status" aria-live="polite"></div>
-          </div>
-          <div id="formPrompt" class="form-prompt hidden">
-            <p class="form-prompt-title">조금 더 자세한 의견을 남겨주실 수 있을까요?</p>
-            <p class="form-prompt-sub">1분이면 충분해요. (선택)</p>
-            <div class="form-prompt-actions">
-              <button id="openFormBtn" type="button">설문에 참여하기</button>
-              <button id="dismissFormBtn" type="button" class="ghost">지금은 괜찮아요</button>
-            </div>
-            <div id="formPromptStatus" class="small"></div>
-          </div>
-          <button id="toggleFormInline" class="linklike" type="button">
-            더 자세한 의견 남기기 (선택)
-          </button>
-          <div id="formInlineWrap" class="hidden">
-            <p class="form-inline-text">
-              새 탭에서 설문을 작성할 수 있어요. 작성 후 이 화면으로 돌아오면 됩니다.
+          <div class="result-detail">
+            <div class="badge" id="label">평균적인 수준</div>
+            <p id="range">예상 적정 수수료 범위: 6% ~ 10%</p>
+            <p id="explanation">
+              평균적인 수준: 현재 선택한 업무 범위 기준으로 보면, 일반적인 사례와 비슷한 수준으로
+              보입니다. 현재 조건을 기준으로 무난한 범위입니다.
             </p>
-            <button id="openFormInlineBtn" type="button" class="ghost">
-              설문 열기
+            <ul id="selected-items" class="selected-items"></ul>
+          </div>
+        </div>
+
+        <div class="action-panel">
+          <p class="action-title">다음 행동을 선택해 보세요</p>
+          <div class="action-buttons">
+            <button class="btn secondary" type="button" data-action="reask_scope">
+              대행사에 포함업무 기준으로 재질문
+            </button>
+            <button class="btn secondary" type="button" data-action="renegotiate_points">
+              수수료 재협상 포인트 보기
+            </button>
+            <button class="btn secondary" type="button" data-action="inhouse_checklist">
+              직접 집행 비교 체크리스트 보기(준비중)
             </button>
           </div>
+        </div>
+
+        <div class="helpful-panel">
+          <p>도움이 되었나요?</p>
+          <div class="helpful-buttons">
+            <button class="btn secondary" type="button" id="helpfulYes">도움 됐어요</button>
+            <button class="btn secondary" type="button" id="helpfulNo">별로예요</button>
+          </div>
+        </div>
+
+        <div class="result-actions">
+          <button class="btn primary" id="saveBtn" type="button">결과 저장하기</button>
+          <button class="btn secondary" id="feedbackBtn" type="button">
+            추가 피드백(1분)
+          </button>
+          <p id="saveStatus" class="status" role="status" aria-live="polite"></p>
         </div>
       </section>
 
@@ -239,4 +218,3 @@
     <script src="script.js"></script>
   </body>
 </html>
-
